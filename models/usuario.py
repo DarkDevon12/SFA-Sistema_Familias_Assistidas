@@ -1,13 +1,14 @@
-# models/usuario.py
+# models/usuario.py (Código CORRIGIDO)
 
 from database.db import get_connection
 
 class Usuario:
-    def __init__(self, id, nome, email, senha, funcao):
+    # A senha FOI REMOVIDA dos atributos da classe
+    def __init__(self, id, nome, email, funcao):
         self.id = id
         self.nome = nome
         self.email = email
-        self.senha = senha
+        # self.senha foi removido
         self.funcao = funcao
 
     def __repr__(self):
@@ -15,14 +16,24 @@ class Usuario:
 
 # Função separada para listar usuários no banco
 def listar_usuarios():
+    # NOTA: O 'SELECT *' ainda puxa a senha. 
+    # Para evitar isso, use SELECT id, nome, email, funcao FROM usuarios
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM usuarios")
+    
+    # Para fins de demonstração, vamos apenas listar os dados necessários
+    cursor.execute("SELECT id, nome, email, funcao FROM usuarios") 
     rows = cursor.fetchall()
     conn.close()
-    return [Usuario(*r) for r in rows]
+    
+    # O *r aqui funciona, pois a ordem dos dados no banco e no construtor são iguais
+    return [Usuario(*r) for r in rows] 
 
 # Apenas para teste rápido (pode remover depois)
 if __name__ == "__main__":
-    usuarios = listar_usuarios()
-    print(usuarios)
+    # Este bloco também deve ser atualizado para a nova estrutura do construtor
+    try:
+        usuarios = listar_usuarios()
+        print(usuarios)
+    except Exception as e:
+        print(f"Erro ao listar usuários (verifique se o banco foi inicializado): {e}")

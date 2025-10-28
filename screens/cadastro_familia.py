@@ -2,7 +2,7 @@
 import tkinter as tk
 from services.familia_service import criar_familia
 
-def abrir_cadastro():
+def abrir_cadastro(master):
     janela = tk.Toplevel()  # importante usar Toplevel em vez de Tk
     janela.title("Cadastro de Família")
     janela.geometry("400x400")

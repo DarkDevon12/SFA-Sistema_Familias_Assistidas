@@ -3,7 +3,7 @@ import tkinter as tk
 from database.db import get_connection
 from models.familia import listar_familias
 
-def abrir_atendimento():
+def abrir_atendimento(master):
     janela = tk.Tk()
     janela.title("Registro de Atendimento")
     janela.geometry("400x400")
