@@ -4,7 +4,6 @@ import tkinter as tk
 # Importações necessárias:
 from screens.login import LoginFrame 
 from screens.dashboard import DashboardFrame 
-from models.usuario import Usuario
 
 class AppPrincipal:
     """Gerencia a janela principal e a navegação entre os Frames."""
@@ -32,12 +31,11 @@ class AppPrincipal:
         self.show_frame("Login")
 
     def show_frame(self, page_name, user_data=None):
-        """Alterna entre as telas (Frames)."""
+        """Alterna entre as telas (Frames) com suporte a dados do usuário logado."""
         
-        # Lógica para inicializar ou atualizar o Dashboard
         if page_name == "Dashboard":
-            # Se o Dashboard ainda não existe, cria ele.
-            if page_name not in self.frames:
+            if "Dashboard" not in self.frames:
+                # Cria o Dashboard pela primeira vez com os dados de usuário
                 self.frames["Dashboard"] = DashboardFrame(
                     parent=self.container, 
                     controller=self, 
@@ -45,8 +43,9 @@ class AppPrincipal:
                 )
                 self.frames["Dashboard"].grid(row=0, column=0, sticky="nsew")
             else:
-                # Se o Dashboard já existe (ex: voltando do login), apenas atualiza
+                # Se já existe, apenas atualiza os dados antes de exibi-lo
                 self.frames["Dashboard"].atualizar_dados(user_data)
-        
+
+        # Pega o Frame desejado e mostra na frente
         frame = self.frames[page_name]
-        frame.tkraise() # Coloca o Frame desejado no topo da pilha
+        frame.tkraise()

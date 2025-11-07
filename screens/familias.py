@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from services.familia_service import listar_familias, excluir_familia
+from screens.historico_familia import HistoricoFamiliaWindow
 
 def abrir_familias():
     janela = tk.Toplevel()
@@ -41,8 +42,18 @@ def abrir_familias():
         carregar_familias()
         messagebox.showinfo("Sucesso", "Família excluída com sucesso.")
 
-    tk.Button(frame_botoes, text="Excluir", command=deletar).pack(side="right", padx=5)
+    def mostrar_historico():
+        selecionado = tree.selection()
+        if not selecionado:
+            messagebox.showwarning("Aviso", "Selecione uma família para ver o histórico.")
+            return
+        item = tree.item(selecionado[0])
+        familia_id = item["values"][0]
+        nome = item["values"][1]
+        HistoricoFamiliaWindow(janela, id_familia=familia_id, nome_familia=nome)
 
+    tk.Button(frame_botoes, text="Excluir", command=deletar).pack(side="right", padx=5)
     tk.Button(frame_botoes, text="Atualizar Lista", command=carregar_familias).pack(side="right", padx=5)
+    tk.Button(frame_botoes, text="Histórico", command=mostrar_historico).pack(side="right", padx=5)
 
     janela.mainloop()
