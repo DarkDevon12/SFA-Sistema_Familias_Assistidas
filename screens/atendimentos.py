@@ -74,7 +74,9 @@ def abrir_atendimento(master, usuario_logado):
         tree.heading(col, text=col)
         tree.column(col, width=100)
 
-    # Função para carregar atendimentos
+    # =========================
+    # FUNÇÕES
+    # =========================
     def carregar_atendimentos():
         conn = get_connection()
         cursor = conn.cursor()
@@ -95,9 +97,9 @@ def abrir_atendimento(master, usuario_logado):
 
     carregar_atendimentos()
 
-    # =========================
-    # FUNÇÕES DE CRUD
-    # =========================
+    # -------------------------
+    # SALVAR
+    # -------------------------
     def salvar_atendimento():
         if not combo_familia.get() or not combo_auxilio.get():
             messagebox.showwarning("Aviso", "Preencha os campos obrigatórios.")
@@ -120,9 +122,10 @@ def abrir_atendimento(master, usuario_logado):
             conn.commit()
             conn.close()
 
-            messagebox.showinfo("Sucesso", "Atendimento salvo com sucesso!")
+            messagebox.showinfo("✅ Sucesso", "Atendimento salvo com sucesso!")
             carregar_atendimentos()
 
+            # Limpa os campos
             combo_familia.set("")
             combo_auxilio.set("")
             entry_observacoes.delete("1.0", tk.END)
@@ -132,6 +135,9 @@ def abrir_atendimento(master, usuario_logado):
         except Exception as e:
             messagebox.showerror("Erro ao salvar", f"Ocorreu um erro:\n{str(e)}")
 
+    # -------------------------
+    # EDITAR
+    # -------------------------
     def editar_atendimento():
         selecionado = tree.selection()
         if not selecionado:
@@ -144,7 +150,6 @@ def abrir_atendimento(master, usuario_logado):
         try:
             conn = get_connection()
             cursor = conn.cursor()
-
             cursor.execute("""
                 SELECT a.id_familia, a.data, a.tipo_auxilio, a.observacoes, a.retorno_previsto
                 FROM atendimentos a
@@ -154,22 +159,23 @@ def abrir_atendimento(master, usuario_logado):
 
             if registro:
                 id_familia, data, tipo, obs, retorno = registro
-                combo_familia.set(f"{id_familia} - (editando)")
-                entry_data.set_date(datetime.strptime(data, "%Y-%m-%d"))
                 combo_auxilio.set(tipo)
+                entry_data.set_date(datetime.strptime(data, "%Y-%m-%d"))
                 entry_observacoes.delete("1.0", tk.END)
                 entry_observacoes.insert("1.0", obs)
                 entry_retorno.set_date(datetime.strptime(retorno, "%Y-%m-%d"))
 
-                # Confirma atualização
                 if messagebox.askyesno("Confirmar edição", "Deseja salvar as alterações?"):
                     cursor.execute("""
                         UPDATE atendimentos
                         SET tipo_auxilio=?, observacoes=?, retorno_previsto=?
                         WHERE id=?
-                    """, (combo_auxilio.get(), entry_observacoes.get("1.0", tk.END).strip(),
-                          datetime.strptime(entry_retorno.get(), "%d/%m/%Y").strftime("%Y-%m-%d"),
-                          id_atendimento))
+                    """, (
+                        combo_auxilio.get(),
+                        entry_observacoes.get("1.0", tk.END).strip(),
+                        datetime.strptime(entry_retorno.get(), "%d/%m/%Y").strftime("%Y-%m-%d"),
+                        id_atendimento
+                    ))
                     conn.commit()
                     messagebox.showinfo("Sucesso", "Atendimento atualizado com sucesso!")
 
@@ -179,6 +185,9 @@ def abrir_atendimento(master, usuario_logado):
         except Exception as e:
             messagebox.showerror("Erro ao editar", f"Ocorreu um erro:\n{str(e)}")
 
+    # -------------------------
+    # EXCLUIR
+    # -------------------------
     def excluir_atendimento():
         selecionado = tree.selection()
         if not selecionado:
@@ -205,13 +214,13 @@ def abrir_atendimento(master, usuario_logado):
             messagebox.showerror("Erro ao excluir", f"Ocorreu um erro:\n{str(e)}")
 
     # =========================
-    # BOTÕES
+    # BOTÕES DE AÇÃO
     # =========================
     frame_botoes = tk.Frame(janela)
     frame_botoes.pack(pady=10)
 
-    tk.Button(frame_botoes, text="Salvar", command=salvar_atendimento, bg="#27AE60", fg="white", width=15).pack(side="left", padx=5)
-    tk.Button(frame_botoes, text="Editar", command=editar_atendimento, bg="#F1C40F", fg="black", width=15).pack(side="left", padx=5)
-    tk.Button(frame_botoes, text="Excluir", command=excluir_atendimento, bg="#C0392B", fg="white", width=15).pack(side="left", padx=5)
+    tk.Button(frame_botoes, text="💾 Salvar", command=salvar_atendimento, bg="#27AE60", fg="white", width=15).pack(side="left", padx=5)
+    tk.Button(frame_botoes, text="✏️ Editar", command=editar_atendimento, bg="#F1C40F", fg="black", width=15).pack(side="left", padx=5)
+    tk.Button(frame_botoes, text="🗑️ Excluir", command=excluir_atendimento, bg="#C0392B", fg="white", width=15).pack(side="left", padx=5)
 
     janela.mainloop()
