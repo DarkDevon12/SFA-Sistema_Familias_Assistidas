@@ -1,4 +1,4 @@
-# services/familia_service.py
+# models/familia_service.py
 from database.db import get_connection
 from models.familia import Familia
 

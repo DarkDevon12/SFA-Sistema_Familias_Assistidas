@@ -5,12 +5,18 @@ from models.familia import Familia
 def criar_familia(responsavel, endereco, telefone, email, necessidades):
     conn = get_connection()
     cursor = conn.cursor()
+
     cursor.execute("""
         INSERT INTO familias (responsavel, endereco, telefone, email, necessidades)
         VALUES (?, ?, ?, ?, ?)
     """, (responsavel, endereco, telefone, email, necessidades))
+
+    familia_id = cursor.lastrowid  # <<< ESSENCIAL
+
     conn.commit()
     conn.close()
+
+    return familia_id  # <<< RETORNA O ID CERTINHO
 
 def listar_familias():
     conn = get_connection()
