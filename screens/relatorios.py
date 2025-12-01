@@ -1,4 +1,3 @@
-# screens/relatorios.py
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from services.relatorio_service import (
@@ -10,6 +9,8 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
+from openpyxl import Workbook
+
 
 class RelatoriosWindow(tk.Toplevel):
     def __init__(self, master=None):
@@ -32,6 +33,9 @@ class RelatoriosWindow(tk.Toplevel):
         self._montar_tab_frequencia()
         self._montar_tab_necessidades()
 
+    # ------------------------------------------------------------------
+    # ABA: FAMÍLIAS
+    # ------------------------------------------------------------------
     def _montar_tab_familias(self):
         cols = ("ID", "Responsável", "Endereço", "Telefone", "Email", "Necessidades")
         self.tv_fam = ttk.Treeview(self.tab_fam, columns=cols, show="headings")
@@ -39,10 +43,22 @@ class RelatoriosWindow(tk.Toplevel):
             self.tv_fam.heading(c, text=c)
             self.tv_fam.column(c, width=140)
         self.tv_fam.pack(fill="both", expand=True)
-        btn = ttk.Button(self.tab_fam, text="Exportar PDF", command=lambda: self._exportar_pdf("familias"))
-        btn.pack(pady=6)
+
+        # botões PDF + Excel
+        frame_btn = tk.Frame(self.tab_fam)
+        frame_btn.pack(pady=6)
+
+        ttk.Button(frame_btn, text="Exportar PDF",
+                   command=lambda: self._exportar_pdf("familias")).grid(row=0, column=0, padx=5)
+
+        ttk.Button(frame_btn, text="Exportar Excel",
+                   command=lambda: self._exportar_excel("familias")).grid(row=0, column=1, padx=5)
+
         self.atualizar_familias()
 
+    # ------------------------------------------------------------------
+    # ABA: FREQUÊNCIA
+    # ------------------------------------------------------------------
     def _montar_tab_frequencia(self):
         cols = ("ID", "Responsável", "Total Atendimentos")
         self.tv_freq = ttk.Treeview(self.tab_freq, columns=cols, show="headings")
@@ -50,10 +66,21 @@ class RelatoriosWindow(tk.Toplevel):
             self.tv_freq.heading(c, text=c)
             self.tv_freq.column(c, width=200)
         self.tv_freq.pack(fill="both", expand=True)
-        btn = ttk.Button(self.tab_freq, text="Exportar PDF", command=lambda: self._exportar_pdf("frequencia"))
-        btn.pack(pady=6)
+
+        frame_btn = tk.Frame(self.tab_freq)
+        frame_btn.pack(pady=6)
+
+        ttk.Button(frame_btn, text="Exportar PDF",
+                   command=lambda: self._exportar_pdf("frequencia")).grid(row=0, column=0, padx=5)
+
+        ttk.Button(frame_btn, text="Exportar Excel",
+                   command=lambda: self._exportar_excel("frequencia")).grid(row=0, column=1, padx=5)
+
         self.atualizar_frequencia()
 
+    # ------------------------------------------------------------------
+    # ABA: NECESSIDADES
+    # ------------------------------------------------------------------
     def _montar_tab_necessidades(self):
         cols = ("Necessidade", "Contagem")
         self.tv_nec = ttk.Treeview(self.tab_nec, columns=cols, show="headings")
@@ -61,10 +88,21 @@ class RelatoriosWindow(tk.Toplevel):
             self.tv_nec.heading(c, text=c)
             self.tv_nec.column(c, width=200)
         self.tv_nec.pack(fill="both", expand=True)
-        btn = ttk.Button(self.tab_nec, text="Exportar PDF", command=lambda: self._exportar_pdf("necessidades"))
-        btn.pack(pady=6)
+
+        frame_btn = tk.Frame(self.tab_nec)
+        frame_btn.pack(pady=6)
+
+        ttk.Button(frame_btn, text="Exportar PDF",
+                   command=lambda: self._exportar_pdf("necessidades")).grid(row=0, column=0, padx=5)
+
+        ttk.Button(frame_btn, text="Exportar Excel",
+                   command=lambda: self._exportar_excel("necessidades")).grid(row=0, column=1, padx=5)
+
         self.atualizar_necessidades()
 
+    # ------------------------------------------------------------------
+    # Atualizações das tabelas
+    # ------------------------------------------------------------------
     def atualizar_familias(self):
         for r in self.tv_fam.get_children():
             self.tv_fam.delete(r)
@@ -83,10 +121,15 @@ class RelatoriosWindow(tk.Toplevel):
         for need, count in necessidades_mais_comuns():
             self.tv_nec.insert("", "end", values=(need, count))
 
+    # ------------------------------------------------------------------
+    # EXPORTAR PARA PDF
+    # ------------------------------------------------------------------
     def _exportar_pdf(self, tipo):
-        path = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("PDF files", "*.pdf")])
+        path = filedialog.asksaveasfilename(defaultextension=".pdf",
+                                            filetypes=[("PDF files", "*.pdf")])
         if not path:
             return
+
         styles = getSampleStyleSheet()
         elems = []
         elems.append(Paragraph("Relatório SFA", styles["Title"]))
@@ -94,11 +137,12 @@ class RelatoriosWindow(tk.Toplevel):
 
         if tipo == "familias":
             hdr = ["ID", "Responsável", "Endereço", "Telefone", "Email", "Necessidades"]
-            data = [hdr] + [[str(x) if x is not None else "" for x in row] for row in listar_familias_simples()]
+            data = [hdr] + [[str(x) if x is not None else "" for x in row]
+                            for row in listar_familias_simples()]
         elif tipo == "frequencia":
             hdr = ["ID", "Responsável", "Total Atendimentos"]
             data = [hdr] + [[str(x) for x in row] for row in frequencia_atendimentos()]
-        else:  # necessidades
+        else:
             hdr = ["Necessidade", "Contagem"]
             data = [hdr] + [[n, str(c)] for n, c in necessidades_mais_comuns()]
 
@@ -111,8 +155,50 @@ class RelatoriosWindow(tk.Toplevel):
         elems.append(table)
 
         doc = SimpleDocTemplate(path, pagesize=A4)
+
         try:
             doc.build(elems)
             messagebox.showinfo("Exportado", f"PDF salvo em: {path}")
         except Exception as e:
             messagebox.showerror("Erro", f"Erro ao gerar PDF: {e}")
+
+    # ------------------------------------------------------------------
+    # EXPORTAR PARA EXCEL (.xlsx)
+    # ------------------------------------------------------------------
+    def _exportar_excel(self, tipo):
+        path = filedialog.asksaveasfilename(
+            defaultextension=".xlsx",
+            filetypes=[("Arquivo Excel", "*.xlsx")]
+        )
+        if not path:
+            return
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Relatório"
+
+        # Define os dados exportados
+        if tipo == "familias":
+            hdr = ["ID", "Responsável", "Endereço", "Telefone", "Email", "Necessidades"]
+            dados = listar_familias_simples()
+
+        elif tipo == "frequencia":
+            hdr = ["ID", "Responsável", "Total Atendimentos"]
+            dados = frequencia_atendimentos()
+
+        else:  # necessidades
+            hdr = ["Necessidade", "Contagem"]
+            dados = necessidades_mais_comuns()
+
+        # Cabeçalho
+        ws.append(hdr)
+
+        # Conteúdo
+        for linha in dados:
+            ws.append(list(linha))
+
+        try:
+            wb.save(path)
+            messagebox.showinfo("Exportado", f"Excel salvo em:\n{path}")
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao salvar Excel:\n{e}")
